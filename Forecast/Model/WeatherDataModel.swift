@@ -13,6 +13,7 @@ struct WeatherDataModel: Codable {
     let daily: [Daily]
     let hourly: [Hourly]
     
+    // MARK: - Current Weather Model
     struct Current: Codable {
         let dt: Int
         let sunrise: Int
@@ -29,6 +30,7 @@ struct WeatherDataModel: Codable {
         let weather: [Weather]
     }
     
+    // MARK: - Hourly Weather Model
     struct Hourly: Codable {
         let dt: Int
         let temp: Double
@@ -38,6 +40,7 @@ struct WeatherDataModel: Codable {
         let weather: [Weather]
     }
     
+    // MARK: - Current Weather Model
     struct Daily: Codable {
         let dt: Int
         let temp: Temp
@@ -52,12 +55,14 @@ struct WeatherDataModel: Codable {
         }
     }
     
+    // MARK: - Sub Detail Model
     struct Weather: Codable {
         let description: String
         let icon: String
     }
 }
 
+// MARK: - Extension for IconImage
 extension WeatherDataModel.Weather {
     var iconImage: String {
         switch icon {
@@ -79,24 +84,43 @@ extension WeatherDataModel.Weather {
         }
     }
 }
-extension Int {
-    var makeString: String {
-        "\(self)"
+
+// MARK: - Extension Current Data Model
+extension WeatherDataModel.Current {
+    var windSpeedWithDirection: String {
+        let windSpeed = "\((wind_speed * 3.6).roundedString(to: 1)) Km/h"
+        switch wind_deg {
+        case 0, 360: return "N \(windSpeed)"
+        case 90: return "E \(windSpeed)"
+        case 180: return "S \(windSpeed)"
+        case 270: return "W \(windSpeed)"
+        case 1..<90: return "NE \(windSpeed)"
+        case 91..<180: return "SE \(windSpeed)"
+        case 181..<270: return "SW \(windSpeed)"
+        case 271..<360: return "NW \(windSpeed)"
+        default: return windSpeed
+        }
     }
-    
+}
+
+// MARK: - Integer To Date Extension
+extension Int {
     var dayDateMonth: String {
         let dateFormatter = DateFormatter ()
         dateFormatter.dateFormat = "EE, MMM d"
         return dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(self)))
     }
     
-    var hourMinuteAmPm: String {
+    func hourMinuteAmPm(_ offset: Int = 0) -> String {
         let dateFormatter = DateFormatter ()
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0) // Because API provider use GMT 00:00 as default TimeZone.
+        // Or dateFormatter.timeZone = TimeZone(abbreviation: "GMT")
         dateFormatter.dateFormat = "h:mm a"
-        return dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(self)))
+        return dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(self.advanced(by: offset))))
     }
 }
 
+// MARK: - Double Extension
 extension Double {
     func roundedString(to digits: Int) -> String {
         String(format: "%.\(digits)f", self)

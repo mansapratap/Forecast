@@ -8,14 +8,18 @@
 import Foundation
 
 struct APIService {
+    
+    // MARK: - Property
     static let shared = APIService()
     
+    // MARK: - API Error Enumeration
     enum APIError: Error {
         case error(_ errorString: String)
     }
     
+    // MARK: - Fetching and Decoding JSON Data
     func getJSON<T: Decodable>(urlString: String,
-                                      dateDecodingStrategy: JSONDecoder.DateDecodingStrategy = .secondsSince1970,
+                               dateDecodingStrategy: JSONDecoder.DateDecodingStrategy = .secondsSince1970,
                                       keyDecodingStrategy: JSONDecoder.KeyDecodingStrategy = .useDefaultKeys,
                                       completion: @escaping (Result<T, APIError>) -> Void) {
         guard let url = URL(string: urlString) else {

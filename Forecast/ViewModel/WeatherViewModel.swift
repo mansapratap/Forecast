@@ -10,12 +10,14 @@ import CoreLocation
 
 final class WeatherViewModel: NSObject, ObservableObject {
     
+    // MARK: - Properties
     @Published var showAlert = false
     @Published var isLoading = true
     @Published var appError: AppError? = nil
     
-    @Published var cityName = ""
+    @Published var searchedCityName = ""
     @Published var currentCityName = ""
+    @Published var timeZoneOffset = 0
     
     @Published var current: WeatherDataModel.Current?
     @Published var daily: [WeatherDataModel.Daily]?
@@ -24,6 +26,7 @@ final class WeatherViewModel: NSObject, ObservableObject {
     let apiService = APIService.shared
     let locationManager = CLLocationManager()
     
+    // MARK: - Initialization
     override init() {
         super.init()
         locationManager.delegate = self
@@ -31,37 +34,38 @@ final class WeatherViewModel: NSObject, ObservableObject {
         requestLocation()
     }
     
+    // MARK: - Class Methods
     func getWeather() {
-        isLoading = true
-        if let coordinate = locationManager.location?.coordinate {
-            performWeatherRequest(with: coordinate)
+        if let location = locationManager.location {
+            performWeatherRequest(with: location)
         }
     }
     
     func fetchWeatherByCityName() {
-        if cityName != "" {
-            CLGeocoder().geocodeAddressString(cityName) { (placemarks, error) in
-                if let coordinate = placemarks?.first?.location?.coordinate {
-                    self.performWeatherRequest(with: coordinate)
-                    self.currentCityName = self.cityName
-                    print(self.currentCityName)
+        if searchedCityName != "" {
+            CLGeocoder().geocodeAddressString(searchedCityName) { (placemarks, error) in
+                if let location = placemarks?.first?.location {
+                    self.performWeatherRequest(with: location)
                 }
             }
         }
     }
     
-    func performWeatherRequest(with coordinate: CLLocationCoordinate2D) {
+    func performWeatherRequest(with location: CLLocation) {
         API.checkForAPIKey()
+        let coordinate = location.coordinate
         let urlString = "https://api.openweathermap.org/data/2.5/onecall?lat=\(coordinate.latitude)&lon=\(coordinate.longitude)&exclude=minutely,alerts&appid=\(API.key)&units=metric"
         apiService.getJSON(urlString: urlString) { (result: Result<WeatherDataModel, APIService.APIError>) in
             switch result {
             case .success(let result):
                 DispatchQueue.main.async { [weak self] in
+                    self?.timeZoneOffset = result.timezone_offset
                     self?.current = result.current
                     self?.daily = result.daily
                     self?.hourly = result.hourly
+                    self?.getCityName(of: location)
                     self?.isLoading = false
-                    print(result.current)
+                    self?.searchedCityName = ""
                 }
             case .failure(let apiError):
                 print("mansaError: \(apiError.localizedDescription)")
@@ -73,19 +77,16 @@ final class WeatherViewModel: NSObject, ObservableObject {
         }
     }
     
-    
-    
-    func getCityName() {
-        if let location = locationManager.location {
-            CLGeocoder().reverseGeocodeLocation(location) { (placemarks, error) in
-                if let newLocation = placemarks?.last?.locality {
-                    self.currentCityName = newLocation
-                }
+    func getCityName(of location: CLLocation) {
+        CLGeocoder().reverseGeocodeLocation(location) { (placemarks, error) in
+            if let placemark = placemarks?.first {
+                self.currentCityName = "\(placemark.locality ?? "") \(placemark.country ?? "")"
             }
         }
     }
 }
 
+// MARK: - CLLocationManagerDelegate
 extension WeatherViewModel: CLLocationManagerDelegate {
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         requestLocation()
@@ -118,7 +119,6 @@ extension WeatherViewModel: CLLocationManagerDelegate {
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         getWeather()
-        getCityName()
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
