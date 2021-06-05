@@ -41,6 +41,8 @@
 		<key>UIColorName</key>
 		<string>AccentColor</string>
 	</dict>
+	<key>UILaunchStoryboardName</key>
+	<string>ForecastLaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>armv7</string>

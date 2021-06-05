@@ -20,8 +20,8 @@ struct APIService {
     // MARK: - Fetching and Decoding JSON Data
     func getJSON<T: Decodable>(urlString: String,
                                dateDecodingStrategy: JSONDecoder.DateDecodingStrategy = .secondsSince1970,
-                                      keyDecodingStrategy: JSONDecoder.KeyDecodingStrategy = .useDefaultKeys,
-                                      completion: @escaping (Result<T, APIError>) -> Void) {
+                               keyDecodingStrategy: JSONDecoder.KeyDecodingStrategy = .useDefaultKeys,
+                               completion: @escaping (Result<T, APIError>) -> Void) {
         guard let url = URL(string: urlString) else {
             completion(.failure(.error(NSLocalizedString("Error: Invalid URL", comment: "Local Language"))))
             return
