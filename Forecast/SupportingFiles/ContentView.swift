@@ -17,15 +17,17 @@ struct ContentView: View {
         if weatherVM.isLoading {
             ProgressView("Loading").font(.largeTitle)
         } else {
-            VStack {
-                SearchView(weatherVM: weatherVM)
-                CurrentView(weatherVM: weatherVM)
-                ScrollView(showsIndicators: false) {
-                    DailyView(weatherVM: weatherVM)
-                    HourlyView(weatherVM: weatherVM)
-                    DetailView(weatherVM: weatherVM)
-                }
-            }.animation(.easeInOut(duration: 1))
+            ScrollView(showsIndicators: false) {
+                VStack {
+                    SearchView(weatherVM: weatherVM)
+                    CurrentView(weatherVM: weatherVM)
+                    ScrollView(showsIndicators: false) {
+                        DailyView(weatherVM: weatherVM)
+                        HourlyView(weatherVM: weatherVM)
+                        DetailView(weatherVM: weatherVM)
+                    }
+                }.animation(.easeInOut(duration: 1))
+            }
         }
     }
 }
